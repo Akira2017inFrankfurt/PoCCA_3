@@ -62,7 +62,7 @@ class SimAttention_1(nn.Module):
     """PoCCA with new trick"""
 
     def __init__(self, patch_num):
-        super(SimAttention_ICCV_1, self).__init__()
+        super(SimAttention_1, self).__init__()
         self.online_encoder = DGCNN_CLS_Encoder_1().to(device)
         self.online_projector = ProjectMLP().to(device)
         self.online_attn = CrossAttnBlock().to(device)
