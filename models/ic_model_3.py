@@ -5,17 +5,17 @@ from utils.utils_data import b_FPS, k_points
 from utils.utils_model import loss_fn, ProjectMLP, momentum_update
 from utils.attention import CrossAttnBlock
 from utils.encoders import DGCNN_CLS_Encoder_1
-from models.ic_model_1 import get_patch_idx, get_features, get_1_branch_feats, device
+from models.ic_model_1 import get_patch_idx, get_features, get_1_branch_feats
 
 
 class SimAttention_3(nn.Module):
     """PoCCA with new trick, online and target branches not merging"""
     def __init__(self, patch_num):
         super(SimAttention_3, self).__init__()
-        self.online_encoder = DGCNN_CLS_Encoder_1().to(device)
-        self.online_projector = ProjectMLP().to(device)
-        self.online_attn = CrossAttnBlock().to(device)
-        self.predictor = ProjectMLP().to(device)
+        self.online_encoder = DGCNN_CLS_Encoder_1().cuda()
+        self.online_projector = ProjectMLP().cuda()
+        self.online_attn = CrossAttnBlock().cuda()
+        self.predictor = ProjectMLP().cuda()
         self.patch_num = patch_num
         self.target_encoder = None
         self.target_projector = None
