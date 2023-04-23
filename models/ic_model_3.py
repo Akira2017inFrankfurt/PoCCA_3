@@ -5,10 +5,7 @@ from utils.utils_data import b_FPS, k_points
 from utils.utils_model import loss_fn, ProjectMLP, momentum_update
 from utils.attention import CrossAttnBlock
 from utils.encoders import DGCNN_CLS_Encoder_1
-from models.ic_model_1 import get_patch_idx, get_features, get_1_branch_feats
-
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+from models.ic_model_1 import get_patch_idx, get_features, get_1_branch_feats, device
 
 
 class SimAttention_3(nn.Module):
