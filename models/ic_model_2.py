@@ -9,7 +9,7 @@ from models.ic_model_1 import get_patch_idx, get_features, get_1_branch_feats
 
 
 class SimAttention_2(nn.Module):
-    """PoCCA with new trick, and positional encoding"""
+    """PoCCA with new trick, and positional encoding, merging features"""
     def __init__(self, patch_num):
         super(SimAttention_2, self).__init__()
         self.online_encoder = DGCNN_CLS_Encoder_1().cuda()
