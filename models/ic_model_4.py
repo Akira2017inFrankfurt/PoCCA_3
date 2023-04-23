@@ -13,13 +13,13 @@ class SimAttention_4(nn.Module):
     
     def __init__(self, patch_num):
         super(SimAttention_4, self).__init__()
-        self.online_encoder = DGCNN_CLS_Encoder_1().to(device)
-        self.online_projector = ProjectMLP().to(device)
-        self.online_attn = CrossAttnBlock().to(device)
-        self.predictor = ProjectMLP().to(device)
-        self.pos_en = PosEncoding().to(device)
+        self.online_encoder = DGCNN_CLS_Encoder_1().cuda()
+        self.online_projector = ProjectMLP().cuda()
+        self.online_attn = CrossAttnBlock().cuda()
+        self.predictor = ProjectMLP().cuda()
+        self.pos_en = PosEncoding().cuda()
 
-        self.after_add_pos_en = nn.Linear(1088, 1024).to(device)
+        self.after_add_pos_en = nn.Linear(1088, 1024).cuda()
 
         self.patch_num = patch_num
         self.target_encoder = None
