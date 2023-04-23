@@ -1,7 +1,8 @@
 import os
 import numpy as np
 from torch.utils.data import Dataset
-from pointwolf import PointWOLF
+from data.pointwolf import PointWOLF
+from data.rstj_aug import rstj_aug
 
 
 def points_sampler(points, num):
@@ -43,34 +44,27 @@ class ShapeNetCLS(Dataset):
     def __len__(self):
         return len(self.data)
 
+    
+class ShapeNetCLS_RSTJ(Dataset):
+    def __init__(self, root, npoints):
+        self.npoints = npoints
+        self.root = root
+        self.train_npy = os.path.join(self.root, "shapenet57448xyzonly.npz")
+        self.td = dict(np.load(self.train_npy))
+        self.data = self.td["data"]
+        self.aug1 = rstj_aug
+        self.aug2 = rstj_aug
 
-if __name__ == "__main__":
-    import torch
-    print('start doing sth!')
-    # test_root = r'/root/autodl-nas/'
-    test_root = r'/Users/huangqianliang/PycharmProjects/pythonProject/data'
-    t_dataset = ShapeNetCLS(root=test_root, npoints=1024)
-    print('Total item number is: ', t_dataset.__len__())  # 57448
-    train_loader = torch.utils.data.DataLoader(t_dataset, batch_size=2, shuffle=True)
-    test_pn_1, test_pn_2, original = 0, 0, 0
-    for m1, m2 in train_loader:
-        print(m1.shape)  # [B, 1024, 3]
-        print('///')
-        print(m2.shape)  # [B, 1024, 3]
-        test_pn_1, test_pn_2 = m1, m2
-        break
+    def __getitem__(self, index):
+        point_set = self.data[index]
+        morph_1 = self.aug1(pc_normalize(point_set))
+        morph_2 = self.aug2(pc_normalize(point_set))
 
-    # # test for visualization
-    # from utils.visualize import visualization
-    #
-    # def vis(test_pn):
-    #     test_pn = test_pn.squeeze()
-    #     print(test_pn.shape)
-    #
-    #     test_pn = test_pn.cpu().numpy()
-    #     point_set = test_pn.astype(np.float32)[:, 0:3]
-    #     visualization(point_set)
+        morph_1 = points_sampler(morph_1, self.npoints)
+        morph_2 = points_sampler(morph_2, self.npoints)
 
-    # vis(original)
-    # vis(test_pn_1)
-    # vis(test_pn_2)
+        return morph_1, morph_2
+
+    def __len__(self):
+        return len(self.data)
+    
