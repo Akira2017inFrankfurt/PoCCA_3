@@ -69,9 +69,7 @@ def get_model(device, checkpoint_path, rank, args):
         print('DGCNN_CLS_Encoder().cuda(), ')
         online_encoder = DGCNN_CLS_Encoder().cuda()
 
-    model = SimAttention_ICCV_1(
-        patch_num=args.patch_num
-    )
+    model = SimAttention_ICCV_1(patch_num=args.patch_num)
 
     if rank == 0:
         torch.save(model.state_dict(), checkpoint_path)
