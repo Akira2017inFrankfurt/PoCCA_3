@@ -58,7 +58,7 @@ def get_1_branch_feats(morph, patch_num, encoder):
     return g_feature, p_features
 
 
-class SimAttention_ICCV_1(nn.Module):
+class SimAttention_1(nn.Module):
     """PoCCA with new trick"""
 
     def __init__(self, patch_num):
@@ -83,7 +83,7 @@ class SimAttention_ICCV_1(nn.Module):
         gf_2, _ = get_1_branch_feats(aug2, self.patch_num, self.target_encoder)
 
         gf_3, pf_3 = get_1_branch_feats(aug2, self.patch_num, self.online_encoder)
-        _, pf_4 = get_1_branch_feats(aug2, self.patch_num, self.online_encoder)
+        _, pf_4 = get_1_branch_feats(aug1, self.patch_num, self.online_encoder)
         gf_4, _ = get_1_branch_feats(aug1, self.patch_num, self.target_encoder)
 
         # concat features
@@ -101,13 +101,12 @@ class SimAttention_ICCV_1(nn.Module):
 
 if __name__ == "__main__":
     import torch
-    # from network.basic_encoders import DGCNN_CLS_Encoder_1
-
+    
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     rand_x_0 = torch.rand([4, 2048, 3]).to(device)
     rand_x_1 = torch.rand([4, 2048, 3]).to(device)
 
-    test_model = SimAttention_ICCV_1(patch_num=4)
+    test_model = SimAttention_1(patch_num=4)
 
     rand_out = test_model(rand_x_0, rand_x_1)
     print('Done! output is: ', rand_out)
