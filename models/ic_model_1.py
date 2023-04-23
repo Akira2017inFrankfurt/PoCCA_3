@@ -7,9 +7,6 @@ from utils.attention import CrossAttnBlock
 from utils.encoders import DGCNN_CLS_Encoder_1
 
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-
 def get_patch_idx(x, patch_num, points_number=None):
     if points_number is None:
         points_number = int(2048 / patch_num)
@@ -63,10 +60,10 @@ class SimAttention_1(nn.Module):
 
     def __init__(self, patch_num):
         super(SimAttention_1, self).__init__()
-        self.online_encoder = DGCNN_CLS_Encoder_1().to(device)
-        self.online_projector = ProjectMLP().to(device)
-        self.online_attn = CrossAttnBlock().to(device)
-        self.predictor = ProjectMLP().to(device)
+        self.online_encoder = DGCNN_CLS_Encoder_1().cuda()
+        self.online_projector = ProjectMLP().cuda()
+        self.online_attn = CrossAttnBlock().cuda()
+        self.predictor = ProjectMLP().cuda()
         self.patch_num = patch_num
         self.target_encoder = None
         self.target_projector = None
