@@ -8,9 +8,6 @@ from utils.encoders import DGCNN_CLS_Encoder_1
 from models.ic_model_1 import get_patch_idx, get_features, get_1_branch_feats
 
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-
 class SimAttention_2(nn.Module):
     """PoCCA with new trick, and positional encoding"""
     def __init__(self, patch_num):
