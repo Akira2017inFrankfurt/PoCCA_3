@@ -1,0 +1,7 @@
+put the test dataset for classification in this file:
+
+- modelnet10
+- modelnet40
+- scanobjectnn
+
+then decompose the zipped dataset.
