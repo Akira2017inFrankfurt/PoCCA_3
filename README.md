@@ -13,6 +13,7 @@ gdown https://drive.google.com/uc?id=15lmtRaHvVIPLOp_o7rms8e6VQp_en8WF
 gdown https://drive.google.com/uc?id=1r3nJ6gEu6cL59h7cIfMrBeY5p1P_JiIV
 gdown https://drive.google.com/uc?id=1-Yhqgi7KH6guIej_4X8pciiybQB4pBWQ
 ```
+from [CrossPoint](https://github.com/MohamedAfham/CrossPoint/blob/master/data/download_data.sh)
 
 ## Installation
 #### Pre-train and Test Enviorment:
