@@ -3,6 +3,7 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+from utils.transformer import Transformer
 
 
 def knn(x, k):
@@ -23,7 +24,11 @@ def get_graph_feature(x, k=20, idx=None, dim9=False):
         else:
             idx = knn(x[:, 6:], k=k)
     device = torch.device('cuda')
+    # idx = idx.to(device)
     idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
+    # idx_base = torch.arange(0, batch_size, device=x.device).view(-1, 1, 1) * num_points
+    # print('idx device', idx.device)
+    # print('idx_base device', idx_base.device)
     idx = idx + idx_base
     idx = idx.view(-1)
     _, num_dims, _ = x.size()
@@ -236,6 +241,64 @@ class DGCNN_CLS_Encoder_1(nn.Module):
         return x
 
 
+class DG_TF_Encoder(nn.Module):
+    def __init__(self):
+        super(DG_TF_Encoder, self).__init__()
+        self.k = 20
+        self.bn1 = nn.BatchNorm2d(64)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.bn3 = nn.BatchNorm2d(64)
+        self.bn4 = nn.BatchNorm1d(1024)
+
+        self.conv1 = nn.Sequential(nn.Conv2d(6, 64, kernel_size=1, bias=False),
+                                   self.bn1,
+                                   nn.LeakyReLU(negative_slope=0.2))
+        self.conv2 = nn.Sequential(nn.Conv2d(64 * 2, 64, kernel_size=1, bias=False),
+                                   self.bn2,
+                                   nn.LeakyReLU(negative_slope=0.2))
+        self.conv3 = nn.Sequential(nn.Conv2d(64 * 2, 64, kernel_size=1, bias=False),
+                                   self.bn3,
+                                   nn.LeakyReLU(negative_slope=0.2))
+
+        self.tf1 = Transformer(dim=192, depth=1, heads=4, dim_head=4, mlp_dim=768, dropout=0.5)
+        self.tf2 = Transformer(dim=192, depth=1, heads=4, dim_head=4, mlp_dim=768, dropout=0.5)
+        self.tf3 = Transformer(dim=192, depth=1, heads=4, dim_head=4, mlp_dim=768, dropout=0.5)
+        self.tf4 = Transformer(dim=192, depth=1, heads=4, dim_head=4, mlp_dim=768, dropout=0.5)
+
+        self.conv4 = nn.Sequential(nn.Conv1d(192 * 4, 1024, kernel_size=1, bias=False),
+                                   self.bn4,
+                                   nn.LeakyReLU(negative_slope=0.2))
+
+    def forward(self, x):
+        x = x.permute(0, 2, 1)
+        batch_size = x.size(0)
+        x = get_graph_feature(x, k=self.k)  # (batch_size, 3, num_points) -> (batch_size, 3*2, num_points, k)
+        x = self.conv1(x)  # (batch_size, 3*2, num_points, k) -> (batch_size, 64, num_points, k)
+        x1 = x.max(dim=-1, keepdim=False)[0]  # (batch_size, 64, num_points, k) -> (batch_size, 64, num_points)
+
+        x = get_graph_feature(x1, k=self.k)  # (batch_size, 64, num_points) -> (batch_size, 64*2, num_points, k)
+        x = self.conv2(x)  # (batch_size, 64*2, num_points, k) -> (batch_size, 64, num_points, k)
+        x2 = x.max(dim=-1, keepdim=False)[0]  # (batch_size, 64, num_points, k) -> (batch_size, 64, num_points)
+
+        x = get_graph_feature(x2, k=self.k)  # (batch_size, 64, num_points) -> (batch_size, 64*2, num_points, k)
+        x = self.conv3(x)  # (batch_size, 64*2, num_points, k) -> (batch_size, 64, num_points, k)
+        x3 = x.max(dim=-1, keepdim=False)[0]  # (batch_size, 64, num_points, k) -> (batch_size, 64, num_points)
+
+        # embedding
+        x = torch.cat((x1, x2, x3), dim=1)  # (batch_size, 64+64+64, num_points)
+
+        # seed it into transformer (bs, 192, n) --- > (bs, n, 192)
+        xf_1 = self.tf1(x.permute(0, 2, 1))
+        xf_2 = self.tf2(xf_1)
+        xf_3 = self.tf2(xf_2)
+        xf_4 = self.tf2(xf_3)
+
+        xf = torch.cat((xf_1, xf_2, xf_3, xf_4), dim=-1)  # bs, n, 768
+        xf = xf.permute(0, 2, 1)  # bs, n, 768 -> bs, 768, n
+        x = self.conv4(xf)
+        return x
+
+
 class DG_Tail(nn.Module):
     def __init__(self, encoder):
         super(DG_Tail, self).__init__()
@@ -291,11 +354,12 @@ class CLS_Tail(nn.Module):
 
 
 if __name__ == "__main__":
-    rand_x_1 = torch.rand([2, 10000, 3]).cuda()
+    rand_x_1 = torch.rand([2, 100, 3]).cuda()
     encoder_1 = PointNet_CLS_Encoder().cuda()
     encoder_2 = DGCNN_CLS_Encoder().cuda()
+    encoder_3 = DG_TF_Encoder().cuda()
 
-    output_2 = encoder_1(rand_x_1)
+    output_2 = encoder_3(rand_x_1)
     print('output shape', output_2.shape)
     # test_1: [2, 1, 1024]
     # test_3: [2, 1, 1024]
